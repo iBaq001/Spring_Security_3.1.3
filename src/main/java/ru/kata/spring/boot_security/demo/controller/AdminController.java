@@ -8,6 +8,7 @@ import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.service.AppService;
 
+import java.security.Principal;
 import java.util.List;
 
 @Controller
@@ -20,9 +21,15 @@ public class AdminController {
     }
 
     @GetMapping()
-    public String findAll(Model model) {
+    public String findAll(Principal principal, Model model) {
+        User newuser = new User();
+        User loguser = appService.getUserByEmail(principal.getName());
         List<User> users = appService.getAllUsers();
+        List<Role> roles = appService.listRoles();
         model.addAttribute("users", users);
+        model.addAttribute("loguser", loguser);
+        model.addAttribute("newuser", newuser);
+        model.addAttribute("roles", roles);
         return "admin";
     }
 
@@ -33,30 +40,19 @@ public class AdminController {
     }
 
     @PostMapping("/user-create")
-    public String createUser(User user) {
+    public String createUser(@ModelAttribute("newuser") User user) {
         appService.saveUser(user);
         return "redirect:/admin";
     }
 
-    @GetMapping("user-delete/{id}")
+    @DeleteMapping("/user-delete/{id}")
     public String deleteUser(@PathVariable("id") Long id) {
         appService.removeUser(id);
         return "redirect:/admin";
     }
 
-    @GetMapping("/user-update/{id}")
-    public String edit(Model model, @PathVariable("id") Long id) {
-        User user = appService.getUserById(id);
-        List<Role> listRoles = appService.listRoles();
-        model.addAttribute("user", user);
-        model.addAttribute("listRoles", listRoles);
-
-        return "user-update";
-    }
-
-    @PostMapping("/user-update/{id}")
+    @PutMapping("/user-update/{id}")
     public String update(@ModelAttribute("user") User user, @PathVariable("id") Long id) {
- //       user.setId(user.getId());
         appService.saveUser(user);
         return "redirect:/admin";
     }
